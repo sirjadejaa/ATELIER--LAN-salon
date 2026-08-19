@@ -9,44 +9,47 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function Hero() {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const heroRef = useRef<HTMLDivElement | null>(null);
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
-  // 1. Guaranteed Autoplay Handling across all modern browsers & iOS Safari
+  // 1. Guaranteed Non-Blocking Autoplay & Progressive Streaming
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      video.muted = true;
-      video.defaultMuted = true;
-      video.playsInline = true;
+    if (!video) return;
 
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsVideoLoaded(true);
-          })
-          .catch(() => {
-            // If browser autoplay policy blocked, retry on first user interaction
-            const handleFirstInteraction = () => {
-              video.play().catch(() => {});
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+
+    // Attempt autoplay; if browser restricts, smoothly listen for first gesture
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setIsVideoLoaded(true);
+        })
+        .catch(() => {
+          const handleFirstInteraction = () => {
+            if (videoRef.current) {
+              videoRef.current.play().catch(() => {});
               setIsVideoLoaded(true);
-              window.removeEventListener("touchstart", handleFirstInteraction);
-              window.removeEventListener("click", handleFirstInteraction);
-              window.removeEventListener("scroll", handleFirstInteraction);
-            };
+            }
+            window.removeEventListener("touchstart", handleFirstInteraction);
+            window.removeEventListener("click", handleFirstInteraction);
+            window.removeEventListener("scroll", handleFirstInteraction);
+          };
 
-            window.addEventListener("touchstart", handleFirstInteraction, { passive: true, once: true });
-            window.addEventListener("click", handleFirstInteraction, { passive: true, once: true });
-            window.addEventListener("scroll", handleFirstInteraction, { passive: true, once: true });
-          });
-      }
+          window.addEventListener("touchstart", handleFirstInteraction, { passive: true, once: true });
+          window.addEventListener("click", handleFirstInteraction, { passive: true, once: true });
+          window.addEventListener("scroll", handleFirstInteraction, { passive: true, once: true });
+        });
     }
   }, []);
 
-  // 2. GSAP Entrance Animations & Scroll-Driven Parallax Depth
+  // 2. Lightweight GSAP Entrance & Gentle 20-30px Parallax (Low GPU overhead)
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
@@ -55,61 +58,41 @@ export default function Hero() {
 
       tl.fromTo(
         ".hero-label-wrap",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.8, delay: 0.1 }
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.7, delay: 0.1 }
       )
         .fromTo(
           ".hero-headline-wrap",
-          { opacity: 0, y: 40, skewY: 1.5 },
-          {
-            opacity: 1,
-            y: 0,
-            skewY: 0,
-            duration: 1.0,
-          },
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.9 },
           "-=0.4"
         )
         .fromTo(
           ".hero-support-wrap",
-          { opacity: 0, y: 22 },
-          { opacity: 1, y: 0, duration: 0.8 },
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.7 },
           "-=0.5"
         )
         .fromTo(
           ".hero-ctas",
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.7 },
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, duration: 0.6 },
           "-=0.4"
         );
 
-      // Scroll-controlled 3D parallax depth effect
+      // Subtle gentle parallax without layout shifts
       if (heroRef.current && videoContainerRef.current) {
         gsap.to(videoContainerRef.current, {
           scrollTrigger: {
             trigger: heroRef.current,
             start: "top top",
             end: "bottom top",
-            scrub: 0.5,
+            scrub: 0.3,
           },
-          scale: 0.92,
-          yPercent: 10,
-          opacity: 0.35,
+          yPercent: 6,
+          opacity: 0.45,
           ease: "none",
         });
-
-        if (contentRef.current) {
-          gsap.to(contentRef.current, {
-            scrollTrigger: {
-              trigger: heroRef.current,
-              start: "top top",
-              end: "bottom top",
-              scrub: 0.5,
-            },
-            yPercent: -20,
-            opacity: 0.15,
-            ease: "none",
-          });
-        }
       }
     }, heroRef);
 
@@ -133,42 +116,56 @@ export default function Hero() {
       ref={heroRef}
       className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-[#141312] text-[#FBF9F5] pt-24 pb-20 selection:bg-[#A75D46] selection:text-[#FBF9F5]"
     >
-      {/* Background Visual Container (Seamless Video Hero without Player UI) */}
+      {/* Background Visual Container */}
       <div
         ref={videoContainerRef}
         className="absolute inset-0 w-full h-full pointer-events-none will-change-transform"
       >
-        {/* Instant Lightweight WebP Poster (Guarantees zero blank screen while video connects) */}
+        {/* Instant Lightweight WebP Poster: Visible immediately, never blank */}
         <div className="absolute inset-0 w-full h-full">
           <Image
             src="/images/hero-poster.webp"
-            alt="Atelier Élan 5-Star Luxury Hair Atelier Mumbai"
+            alt="Atelier Élan Luxury Hair Atelier Mumbai"
             fill
             sizes="100vw"
             priority
+            quality={80}
             className="object-cover object-center brightness-90 contrast-105"
           />
         </div>
 
-        {/* Real Cinematic Background Video (Muted, AutoPlay, Looping, Fullscreen) */}
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          disablePictureInPicture
-          controls={false}
-          preload="auto"
-          onPlaying={() => setIsVideoLoaded(true)}
-          onCanPlay={() => setIsVideoLoaded(true)}
-          className={`absolute inset-0 w-full h-full object-cover object-center brightness-90 contrast-105 transition-opacity duration-1000 ease-out ${
-            isVideoLoaded ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <source src="/videos/hero-desktop.mp4" type="video/mp4" />
-          <source src="/videos/hero-desktop.webm" type="video/webm" />
-        </video>
+        {/* Real Progressive Cinematic Background Video (Preload Metadata, Muted, AutoPlay, Looping) */}
+        {!videoFailed && (
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            disablePictureInPicture
+            controls={false}
+            preload="metadata"
+            onLoadedData={() => setIsVideoLoaded(true)}
+            onPlaying={() => setIsVideoLoaded(true)}
+            onError={() => setVideoFailed(true)}
+            className={`absolute inset-0 w-full h-full object-cover object-center brightness-90 contrast-105 transition-opacity duration-1000 ease-out ${
+              isVideoLoaded ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <source
+              media="(max-width: 768px)"
+              src="/videos/hero-mobile.mp4"
+              type="video/mp4"
+            />
+            <source
+              media="(max-width: 768px)"
+              src="/videos/hero-mobile.webm"
+              type="video/webm"
+            />
+            <source src="/videos/hero-desktop.webm" type="video/webm" />
+            <source src="/videos/hero-desktop.mp4" type="video/mp4" />
+          </video>
+        )}
 
         {/* Luxury Film Gradients & Ambient Vignette */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#141312] via-[#141312]/45 to-[#141312]/65" />

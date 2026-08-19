@@ -150,7 +150,7 @@ export default function StudioIntro() {
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover object-center scale-105"
-                loading="eager"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#141312]/30 via-transparent to-transparent" />
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { bookingEmitter } from "@/lib/bookingStore";
 import { INITIAL_SERVICES, INITIAL_STAFF, INITIAL_SETTINGS } from "@/lib/data";
@@ -39,30 +39,19 @@ export default function BookingModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<BookingItem | null>(null);
 
-  // Subscribe to booking emitter events
-  useEffect(() => {
-    const unsubscribe = bookingEmitter.subscribe((state) => {
-      setIsOpen(state.isOpen);
-      if (state.isOpen) {
-        setStep(1);
-        setConfirmedBooking(null);
-        if (state.serviceId) {
-          const match = services.find((s) => s.id === state.serviceId);
-          if (match) {
-            setSelectedService(match);
-            setStep(2);
-          }
-        }
-        if (state.staffId) {
-          const match = staffList.find((s) => s.id === state.staffId);
-          if (match) {
-            setSelectedStaff(match);
-          }
-        }
-      }
-    });
+  const servicesRef = useRef(services);
+  const staffListRef = useRef(staffList);
 
-    // Fetch dynamic services and staff from API if available
+  useEffect(() => {
+    servicesRef.current = services;
+  }, [services]);
+
+  useEffect(() => {
+    staffListRef.current = staffList;
+  }, [staffList]);
+
+  // 1. Fetch dynamic services and staff once on mount
+  useEffect(() => {
     fetch("/api/services")
       .then((res) => res.json())
       .then((data) => {
@@ -76,9 +65,33 @@ export default function BookingModal() {
         if (Array.isArray(data) && data.length > 0) setStaffList(data);
       })
       .catch(() => {});
+  }, []);
+
+  // 2. Subscribe to booking emitter events
+  useEffect(() => {
+    const unsubscribe = bookingEmitter.subscribe((state) => {
+      setIsOpen(state.isOpen);
+      if (state.isOpen) {
+        setStep(1);
+        setConfirmedBooking(null);
+        if (state.serviceId) {
+          const match = servicesRef.current.find((s) => s.id === state.serviceId);
+          if (match) {
+            setSelectedService(match);
+            setStep(2);
+          }
+        }
+        if (state.staffId) {
+          const match = staffListRef.current.find((s) => s.id === state.staffId);
+          if (match) {
+            setSelectedStaff(match);
+          }
+        }
+      }
+    });
 
     return () => unsubscribe();
-  }, [services, staffList]);
+  }, []);
 
   // Generate next 14 bookable dates (excluding Mondays)
   const getAvailableDates = () => {

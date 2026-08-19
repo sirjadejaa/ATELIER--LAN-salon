@@ -15,30 +15,31 @@ export default function SafeImage({
   src,
   alt,
   className = "",
-  fallbackSrc = "https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=1200&q=80",
+  fallbackSrc = "https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=1200&q=75",
   placeholder = "blur",
   blurDataURL = SHIMMER_BLUR_DATA_URL,
+  quality = 75,
   ...props
 }: SafeImageProps) {
-  const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   return (
     <Image
       {...props}
-      src={hasError ? fallbackSrc : imgSrc}
+      src={hasError ? fallbackSrc : src}
       alt={alt || "Atelier Élan Editorial"}
+      quality={quality}
       placeholder={placeholder}
       blurDataURL={blurDataURL}
-      className={`transition-opacity duration-700 ease-out ${
-        isLoaded ? "opacity-100" : "opacity-0"
+      className={`transition-opacity duration-500 ease-out ${
+        isLoaded ? "opacity-100" : "opacity-90"
       } ${className}`}
       onLoad={() => setIsLoaded(true)}
       onError={() => {
         if (!hasError) {
           setHasError(true);
-          setImgSrc(fallbackSrc);
+          setIsLoaded(true);
         }
       }}
     />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { bookingEmitter } from "@/lib/bookingStore";
 import { MapPin, Phone, Mail, Clock, MessageCircle, Send, CheckCircle2 } from "lucide-react";
 
@@ -122,12 +122,13 @@ export default function ContactSection() {
 
             {/* Architectural Location Visual Card */}
             <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden shadow-lg border border-[rgba(20,19,18,0.08)] bg-[#EBE6DC]">
-              <Image
+              <SafeImage
                 src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80"
                 alt="Atelier Élan Mumbai Sanctuary Building"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover object-center"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#141312]/70 via-transparent to-transparent flex items-end p-6">
                 <a

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import SalonLogo from "@/components/SalonLogo";
 import { bookingEmitter } from "@/lib/bookingStore";
@@ -24,50 +24,72 @@ const NAV_LINKS: NavLink[] = [
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState<string>("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const progressBarRef = useRef<HTMLDivElement | null>(null);
+  const isScrolledRef = useRef(false);
+  const activeSectionRef = useRef("home");
 
-  // Track scroll position, reading progress, and active section scroll spy
+  // Track scroll position, reading progress, and active section scroll spy with zero frame overhead
   useEffect(() => {
+    let rafId: number;
+
     const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const currentScroll = window.scrollY;
+        const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
 
-      setIsScrolled(currentScroll > 45);
+        // Direct DOM update for reading bar (0 React re-renders while scrolling)
+        if (progressBarRef.current && totalScroll > 0) {
+          const progress = Math.min(100, (currentScroll / totalScroll) * 100);
+          progressBarRef.current.style.width = `${progress}%`;
+        }
 
-      if (totalScroll > 0) {
-        setScrollProgress((currentScroll / totalScroll) * 100);
-      }
+        const nextScrolled = currentScroll > 45;
+        if (nextScrolled !== isScrolledRef.current) {
+          isScrolledRef.current = nextScrolled;
+          setIsScrolled(nextScrolled);
+        }
 
-      // If near top of page, HOME is active
-      if (currentScroll < 260) {
-        setActiveSection("home");
-        return;
-      }
+        // If near top of page, HOME is active
+        if (currentScroll < 260) {
+          if (activeSectionRef.current !== "home") {
+            activeSectionRef.current = "home";
+            setActiveSection("home");
+          }
+          return;
+        }
 
-      // Scroll Spy: Determine currently active section
-      const scrollPosition = currentScroll + 140; // Offset for navbar
+        // Scroll Spy: Determine currently active section
+        const scrollPosition = currentScroll + 140; // Offset for navbar
 
-      for (let i = NAV_LINKS.length - 1; i >= 0; i--) {
-        const link = NAV_LINKS[i];
-        if (link.id === "home") continue;
+        for (let i = NAV_LINKS.length - 1; i >= 0; i--) {
+          const link = NAV_LINKS[i];
+          if (link.id === "home") continue;
 
-        const section = document.getElementById(link.id);
-        if (section) {
-          const top = section.offsetTop;
-          const height = section.offsetHeight;
-          if (scrollPosition >= top && scrollPosition < top + height) {
-            setActiveSection(link.id);
-            return;
+          const section = document.getElementById(link.id);
+          if (section) {
+            const top = section.offsetTop;
+            const height = section.offsetHeight;
+            if (scrollPosition >= top && scrollPosition < top + height) {
+              if (activeSectionRef.current !== link.id) {
+                activeSectionRef.current = link.id;
+                setActiveSection(link.id);
+              }
+              return;
+            }
           }
         }
-      }
+      });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Lock body scroll when mobile menu is open
@@ -230,8 +252,9 @@ export default function Navbar() {
         {/* Real-time Page Reading Scroll Progress Bar */}
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-transparent overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[#A75D46] via-[#C47D68] to-[#141312] transition-all duration-150 ease-out"
-            style={{ width: `${scrollProgress}%` }}
+            ref={progressBarRef}
+            className="h-full bg-gradient-to-r from-[#A75D46] via-[#C47D68] to-[#141312] transition-all duration-75 ease-out"
+            style={{ width: "0%" }}
           />
         </div>
       </header>

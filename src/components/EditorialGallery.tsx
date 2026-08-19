@@ -78,7 +78,7 @@ export default function EditorialGallery({
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                  loading={idx < 4 ? "eager" : "lazy"}
+                  loading="lazy"
                 />
                 
                 {/* Overlay Vignette */}
