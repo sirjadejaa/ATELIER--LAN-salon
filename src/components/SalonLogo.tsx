@@ -56,27 +56,16 @@ export default function SalonLogo({
         </svg>
       </div>
 
-      {/* Compact Brand Typography */}
-      <div className="flex flex-col text-left leading-none">
-        <div className="flex items-center gap-1">
-          <span
-            className={`font-serif-luxury text-lg sm:text-xl font-normal tracking-tight transition-colors duration-300 ${
-              isLight
-                ? "text-[#FBF9F5] group-hover:text-[#EBE6DC]"
-                : "text-[#141312] group-hover:text-[#A75D46]"
-            }`}
-          >
-            ATELIER ÉLAN
-          </span>
-        </div>
+      {/* Clean Brand Typography without Subtitle */}
+      <div className="flex flex-col text-left leading-none justify-center">
         <span
-          className={`editorial-label text-[7.5px] sm:text-[8px] tracking-[0.26em] uppercase mt-0.5 transition-colors duration-300 ${
+          className={`font-serif-luxury text-lg sm:text-xl font-normal tracking-tight transition-colors duration-300 ${
             isLight
-              ? "text-[#A39E99] group-hover:text-[#FBF9F5]"
-              : "text-[#6B6661] group-hover:text-[#141312]"
+              ? "text-[#FBF9F5] group-hover:text-[#EBE6DC]"
+              : "text-[#141312] group-hover:text-[#A75D46]"
           }`}
         >
-          HAUTE COIFFURE · MUMBAI
+          ATELIER ÉLAN
         </span>
       </div>
     </Link>

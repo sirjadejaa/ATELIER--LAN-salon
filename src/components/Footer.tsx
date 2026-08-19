@@ -172,7 +172,7 @@ export default function Footer() {
 
         {/* Bottom Copyright & Fine Print */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#6B6661] gap-4">
-          <p>© {new Date().getFullYear()} ATELIER ÉLAN HAUTE COIFFURE. ALL RIGHTS RESERVED.</p>
+          <p>© {new Date().getFullYear()} ATELIER ÉLAN. ALL RIGHTS RESERVED.</p>
           <div className="flex gap-6">
             <span className="hover:text-[#A39E99] cursor-pointer">PRIVACY POLICY</span>
             <span className="hover:text-[#A39E99] cursor-pointer">TERMS OF SANCTUARY</span>
