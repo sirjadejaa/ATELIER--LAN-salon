@@ -1,0 +1,142 @@
+// Prisma schema for Atelier Élan Luxury Salon
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  category    String    // CUT, STYLING, COLOUR, BALAYAGE, TREATMENT, GROOMING
+  description String
+  price       Float
+  duration    Int       // in minutes
+  imageUrl    String
+  active      Boolean   @default(true)
+  order       Int       @default(0)
+  featured    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
+}
+
+model Staff {
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  role            String         // Creative Director, Master Colorist, etc.
+  bio             String
+  specialties     String         // Comma-separated or JSON list
+  experience      String         // e.g. "8+ Years"
+  imageUrl        String
+  instagram       String?
+  active          Boolean        @default(true)
+  order           Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  bookings        Booking[]
+  transformations BeforeAfter[]
+}
+
+model Package {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  price            Float
+  duration         Int      // in minutes
+  description      String
+  includedServices String   // JSON array or newline-separated
+  active           Boolean  @default(true)
+  order            Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  bookingNumber String   @unique
+  customerName  String
+  customerEmail String
+  customerPhone String
+  date          String   // YYYY-MM-DD
+  timeSlot      String   // e.g. "11:00 AM"
+  serviceId     String?
+  service       Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  staffId       String?
+  staff         Staff?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  packageId     String?
+  notes         String?
+  status        String   @default("CONFIRMED") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BeforeAfter {
+  id             String   @id @default(cuid())
+  title          String
+  category       String   // ALL, CUT, COLOUR, STYLE, TRANSFORMATION
+  stylistId      String?
+  stylist        Staff?   @relation(fields: [stylistId], references: [id], onDelete: SetNull)
+  serviceName    String
+  beforeImageUrl String
+  afterImageUrl  String
+  description    String?
+  active         Boolean  @default(true)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model GalleryItem {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // INTERIOR, CRAFT, DETAILS, ATELIER, PORTRAIT
+  imageUrl    String
+  aspectRatio String   @default("portrait") // portrait, landscape, square
+  caption     String?
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model Testimonial {
+  id             String   @id @default(cuid())
+  clientName     String
+  clientRole     String?
+  quote          String
+  rating         Int      @default(5)
+  clientImageUrl String?
+  serviceName    String?
+  active         Boolean  @default(true)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
+model StudioSettings {
+  id            String   @id @default("singleton")
+  salonName     String   @default("ATELIER ÉLAN")
+  tagline       String   @default("Modern Hair Studio & Sanctuary")
+  phone         String   @default("+91 98765 43210")
+  whatsapp      String   @default("+919876543210")
+  email         String   @default("concierge@atelier-elan.com")
+  address       String   @default("14, Alipore Heritage Enclave, South Avenue, Mumbai")
+  openingHours  String   @default("Tue – Sun: 10:00 AM – 08:30 PM | Mon: Closed for Private Appointments")
+  instagram     String   @default("@atelier.elan")
+  googleMapsUrl String   @default("https://maps.google.com")
+  updatedAt     DateTime @updatedAt
+}
